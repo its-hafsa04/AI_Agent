@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ChatSessionStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  email        String        @unique @db.VarChar(320)
+  passwordHash String        @db.VarChar(255)
+  name         String        @db.VarChar(160)
+  phone        String?       @db.VarChar(32)
+  timezone     String        @default("UTC") @db.VarChar(64)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(6)
+  appointments Appointment[]
+  chatSessions ChatSession[]
+
+  @@index([name])
+}
+
+model Appointment {
+  id        String            @id @default(uuid()) @db.Uuid
+  userId    String            @db.Uuid
+  title     String            @db.VarChar(200)
+  notes     String?
+  startsAt  DateTime          @db.Timestamptz(6)
+  endsAt    DateTime          @db.Timestamptz(6)
+  status    AppointmentStatus @default(SCHEDULED)
+  createdAt DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime          @updatedAt @db.Timestamptz(6)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startsAt])
+  @@index([status, startsAt])
+  @@index([startsAt])
+}
+
+model ChatSession {
+  id            String            @id @default(uuid()) @db.Uuid
+  userId        String?           @db.Uuid
+  status        ChatSessionStatus @default(ACTIVE)
+  title         String?           @db.VarChar(200)
+  history       Json              @default("[]")
+  metadata      Json              @default("{}")
+  startedAt     DateTime          @default(now()) @db.Timestamptz(6)
+  lastMessageAt DateTime?         @db.Timestamptz(6)
+  endedAt       DateTime?         @db.Timestamptz(6)
+  createdAt     DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime          @updatedAt @db.Timestamptz(6)
+  user          User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, updatedAt])
+  @@index([status, lastMessageAt])
+}

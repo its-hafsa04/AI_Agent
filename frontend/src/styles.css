@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+
+:root {
+  font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  color: #292524;
+  background: #f7f5f0;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.chat-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: #0f766e;
+  animation: chat-pulse 1.2s ease-in-out infinite;
+}
+
+.chat-dot-delay-1 { animation-delay: 0.15s; }
+.chat-dot-delay-2 { animation-delay: 0.3s; }
+
+@keyframes chat-pulse {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-0.2rem); }
+}
+
+@media (max-width: 640px) {
+  .chat-scroll { min-height: 50vh; }
+}
