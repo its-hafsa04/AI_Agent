@@ -30,7 +30,7 @@ export class ApiError extends Error {
   }
 }
 
-const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const apiUrl = import.meta.env.VITE_API_URL ?? 'https://ai-agent-umber-six.vercel.app';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('appointment_token');
