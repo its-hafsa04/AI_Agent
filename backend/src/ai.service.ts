@@ -67,7 +67,7 @@ export class AiService {
         return { response: recoverAppointmentRequest(currentUserMessage, recentConversationContext), success: false, errorType: 'validation_failure' };
       }
 
-      return { response: addMissingFields(validatedOutput.data), success: true };
+      return { response: addMissingFields(normalizeAppointmentFields(validatedOutput.data)), success: true };
     } catch (error) {
       const errorType = error instanceof Error && error.message === 'Gemini request timed out'
         ? 'timeout'
@@ -123,6 +123,12 @@ const addMissingFields = (response: AiResponse): AiResponse => {
   return { ...response, missingFields };
 };
 
+const normalizeAppointmentFields = (response: AiResponse): AiResponse => ({
+  ...response,
+  date: response.date ? extractDate(response.date) ?? response.date : null,
+  time: response.time ? extractTime(response.time) ?? response.time : null,
+});
+
 const recoverAppointmentRequest = (
   currentUserMessage: string,
   recentConversationContext: ConversationMessage[],
@@ -161,10 +167,15 @@ const extractDate = (text: string): string | null => {
   }
 
   const monthDate = text.match(/\b(?:on\s+)?(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})(?:,?\s+(20\d{2}))?\b/i);
-  if (!monthDate) return null;
-  const year = monthDate[3] ? Number(monthDate[3]) : new Date().getUTCFullYear();
-  const month = new Date(`${monthDate[1]} 1, ${year}`).getMonth() + 1;
-  return `${year}-${String(month).padStart(2, '0')}-${monthDate[2].padStart(2, '0')}`;
+  const dayMonthDate = text.match(/\b(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)(?:,?\s+(20\d{2}))?\b/i);
+  const matchedDate = monthDate ?? dayMonthDate;
+  if (!matchedDate) return null;
+  const day = monthDate ? monthDate[2] : dayMonthDate![1];
+  const monthName = monthDate ? monthDate[1] : dayMonthDate![2];
+  const yearValue = monthDate ? monthDate[3] : dayMonthDate![3];
+  const year = yearValue ? Number(yearValue) : new Date().getUTCFullYear();
+  const month = new Date(`${monthName} 1, ${year}`).getMonth() + 1;
+  return `${year}-${String(month).padStart(2, '0')}-${day.padStart(2, '0')}`;
 };
 
 const extractTime = (text: string): string | null => {
